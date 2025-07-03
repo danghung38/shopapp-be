@@ -10,7 +10,7 @@ spring:
       max-file-size: 10MB   # Giới hạn dung lượng tối đa của mỗi file (ở đây là 10MB)
       max-request-size: 20MB  # Giới hạn dung lượng tối đa của toàn bộ request
   datasource:
-    url: "jdbc:mysql://localhost:3306/base_jwt"
+    url: "jdbc:mysql://localhost:3306/shopapp_be"
     username: root
     password: 123456
   jpa:
