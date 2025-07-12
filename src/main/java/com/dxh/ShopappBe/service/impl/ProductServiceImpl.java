@@ -16,6 +16,7 @@ import com.dxh.ShopappBe.repo.specification.UserSpecificationsBuilder;
 import com.dxh.ShopappBe.service.AwsS3Service;
 import com.dxh.ShopappBe.service.interfac.CategoryService;
 import com.dxh.ShopappBe.service.interfac.ProductService;
+import com.dxh.ShopappBe.utils.Utils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -98,27 +99,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public PageResponse<List<ProductResponse>> getAllProductSortByAndSearch(Integer pageNo, Integer pageSize, String sortBy, String[] product,String[] category) {
-        int page = pageNo>0?(pageNo-1):0;
-        List<Sort.Order> sorts = new ArrayList<>();
-        if (StringUtils.hasLength(sortBy)) {
-            // name:asc|desc
-            Pattern pattern = Pattern.compile(SORT_BY); // AppConstant.SORT_BY = "(\\w+?)(:)(.*)"
-            Matcher matcher = pattern.matcher(sortBy);
-            if (matcher.find()) {
-                String field = matcher.group(1);
-                String direction = matcher.group(3);
-                if (!direction.equalsIgnoreCase("asc") && !direction.equalsIgnoreCase("desc")) {
-                    throw new IllegalArgumentException("Sort direction must be 'asc' or 'desc'");
-                }
-                if (direction.equalsIgnoreCase("asc")) {
-                    sorts.add(new Sort.Order(Sort.Direction.ASC, field));
-                } else {
-                    sorts.add(new Sort.Order(Sort.Direction.DESC, field));
-                }
-            }
-        }
-        Pageable pageable = PageRequest.of(page, pageSize, Sort.by(sorts));
-
+        Pageable pageable = Utils.createPageable(pageNo, pageSize, sortBy);
 //        có tìm kiếm
         if (product != null || category != null) {
             return customSearchProductRepository.searchProductByCriteriaWithJoin(pageable,product,category);

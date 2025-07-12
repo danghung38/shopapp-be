@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -13,11 +13,9 @@ import java.io.Serializable;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuthenticationResponse implements Serializable {
-    boolean authenticated;
-    String token;
-    Long userId;
-    String role;
-    String username;
-    String fullName;
+public class ChatMessageResponse {
+    String content;
+    String from;
+    String to;
+    LocalDateTime timestamp;
 }

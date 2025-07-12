@@ -2,23 +2,36 @@ package com.dxh.ShopappBe.service.impl;
 
 import com.dxh.ShopappBe.dto.request.OrderCreateRequest;
 import com.dxh.ShopappBe.dto.response.OrderResponse;
+import com.dxh.ShopappBe.dto.response.PageResponse;
+import com.dxh.ShopappBe.dto.response.ProductResponse;
 import com.dxh.ShopappBe.entity.*;
 import com.dxh.ShopappBe.enums.OrderStatus;
 import com.dxh.ShopappBe.exception.AppException;
 import com.dxh.ShopappBe.exception.ErrorCode;
 import com.dxh.ShopappBe.mapper.OrderMapper;
 import com.dxh.ShopappBe.repo.*;
+import com.dxh.ShopappBe.service.WebSocketService;
 import com.dxh.ShopappBe.service.interfac.OrderService;
+import com.dxh.ShopappBe.utils.Utils;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static com.dxh.ShopappBe.utils.AppConstant.SORT_BY;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +45,8 @@ public class OrderServiceImpl implements OrderService {
     DiscountRepository discountRepository;
     CartItemRepository cartItemRepository;
     OrderMapper orderMapper;
-    private final ProductRepository productRepository;
+    ProductRepository productRepository;
+    WebSocketService webSocketService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -88,6 +102,7 @@ public class OrderServiceImpl implements OrderService {
 
             //set lại số lượng
             product.setQuantity(product.getQuantity()-cartItem.getQuantity());
+            product.setTotalSold(product.getTotalSold()+cartItem.getQuantity());
             productRepository.save(product);
 
             OrderItem orderItem = OrderItem.builder()
@@ -115,9 +130,95 @@ public class OrderServiceImpl implements OrderService {
             discountRepository.save(discount);
         }
 
+        webSocketService.sendNewOrderNotification(orderResponse.getId(),user.getFullName());
+
         // 9. Trả về kết quả
         return orderResponse;
     }
+
+    @Override
+    public OrderResponse getOrderById(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(()-> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+        OrderResponse orderResponse = orderMapper.toOrderResponse(order);
+        orderResponse.setOrderStatus(order.getStatus().name());
+        return orderResponse;
+    }
+
+    @Override
+    public PageResponse<List<OrderResponse>> getAllOrder(Integer pageNo, Integer pageSize, String sortBy) {
+        Pageable pageable = Utils.createPageable(pageNo, pageSize, sortBy);
+        Page<Order> orders = orderRepository.findAll(pageable);
+        List<OrderResponse> response = orders.stream().map(o -> {
+            OrderResponse orderResponse = orderMapper.toOrderResponse(o);
+            orderResponse.setOrderStatus(o.getStatus().name());
+            return orderResponse;
+        }).toList();
+        return PageResponse.<List<OrderResponse>>builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .totalPage(orders.getTotalPages())
+                .items(response)
+                .totalElements(orders.getTotalElements())
+                .build();
+    }
+
+    @Override
+    public PageResponse<List<OrderResponse>> getOrderByStatus(String status, Integer pageNo, Integer pageSize, String sortBy) {
+        Pageable pageable = Utils.createPageable(pageNo, pageSize, sortBy);
+        Page<Order> orders = orderRepository.findAllByStatus(OrderStatus.valueOf(status.toUpperCase()),pageable);
+        List<OrderResponse> response = orders.stream().map(o -> {
+            OrderResponse orderResponse = orderMapper.toOrderResponse(o);
+            orderResponse.setOrderStatus(o.getStatus().name());
+            return orderResponse;
+        }).toList();
+        return PageResponse.<List<OrderResponse>>builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .totalPage(orders.getTotalPages())
+                .items(response)
+                .totalElements(orders.getTotalElements())
+                .build();
+    }
+
+    @Override
+    public PageResponse<List<OrderResponse>> getMyOrder(Integer pageNo, Integer pageSize, String sortBy) {
+        Pageable pageable = Utils.createPageable(pageNo, pageSize, sortBy);
+        User user = checkUser();
+
+        Page<Order> orders = orderRepository.findAllByUser_Id(user.getId(),pageable);
+        List<OrderResponse> response = orders.stream().map(o -> {
+            OrderResponse orderResponse = orderMapper.toOrderResponse(o);
+            orderResponse.setOrderStatus(o.getStatus().name());
+            return orderResponse;
+        }).toList();
+        return PageResponse.<List<OrderResponse>>builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .totalPage(orders.getTotalPages())
+                .items(response)
+                .totalElements(orders.getTotalElements())
+                .build();
+    }
+
+    @Override
+    public PageResponse<List<OrderResponse>> getOrderByUserId(Long id, Integer pageNo, Integer pageSize, String sortBy) {
+        Pageable pageable = Utils.createPageable(pageNo, pageSize, sortBy);
+        Page<Order> orders = orderRepository.findAllByUser_Id(id,pageable);
+        List<OrderResponse> response = orders.stream().map(o -> {
+            OrderResponse orderResponse = orderMapper.toOrderResponse(o);
+            orderResponse.setOrderStatus(o.getStatus().name());
+            return orderResponse;
+        }).toList();
+        return PageResponse.<List<OrderResponse>>builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .totalPage(orders.getTotalPages())
+                .items(response)
+                .totalElements(orders.getTotalElements())
+                .build();
+    }
+
 
     private User checkUser(){
         var authentication = SecurityContextHolder.getContext().getAuthentication();

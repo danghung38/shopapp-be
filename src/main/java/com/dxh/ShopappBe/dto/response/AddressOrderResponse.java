@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.io.Serializable;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -13,11 +11,17 @@ import java.io.Serializable;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuthenticationResponse implements Serializable {
-    boolean authenticated;
-    String token;
-    Long userId;
-    String role;
-    String username;
+public class AddressOrderResponse {
+
     String fullName;
+
+    String phone;
+
+    String city;
+
+    String district;
+
+    String wards;
+
+    String specificAddress;
 }

@@ -78,6 +78,7 @@ public class UserController {
 
     @Operation(summary = "Get list of users per pageNo and sort by one column", description = "Send a request via this API to get user list by pageNo and pageSize")
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ApiResponse<PageResponse<List<UserResponse>>> getAllUsersSortBy(@RequestParam(defaultValue = "1", required = false) Integer pageNo,
                                                                      @Min(value = 1,message = "pageSize must be greater than 1") @RequestParam(defaultValue = "20", required = false) Integer pageSize,
                                                                      @RequestParam(required = false) String sortBy) {

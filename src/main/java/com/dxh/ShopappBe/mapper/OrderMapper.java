@@ -5,10 +5,11 @@ import com.dxh.ShopappBe.entity.Order;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring",uses = {OrderItemMapper.class})
+@Mapper(componentModel = "spring",uses = {OrderItemMapper.class,UserMapper.class,AddressMapper.class, DiscountMapper.class})
 public interface OrderMapper {
 
-    @Mapping(target = "userId", source = "user.id")
-    @Mapping(target = "addressId", source = "shippingAddress.id")
+    @Mapping(target = "userOrder", source = "user")
+    @Mapping(target = "addressOrder", source = "shippingAddress")
+    @Mapping(target = "discountOrder",source = "discount")
     OrderResponse toOrderResponse(Order order);
 }

@@ -25,9 +25,11 @@ public class OrderResponse {
 
     String orderStatus;
 
-    Long userId;
+    UserOrderResponse userOrder;
 
-    Long addressId;
+    AddressOrderResponse addressOrder;
+
+    DiscountOrderResponse discountOrder;
 
     List<OrderItemResponse> orderItems;
 

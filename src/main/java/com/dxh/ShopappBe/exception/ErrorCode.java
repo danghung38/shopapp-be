@@ -16,6 +16,7 @@ public enum ErrorCode {
     INVALID_NAME(400, "Name cannot be left blank", HttpStatus.BAD_REQUEST),
     INVALID_PHONENUMBER(400, "Enter correct phone number format", HttpStatus.BAD_REQUEST),
     INVALID_GENDER(400, "gender must be any of {MALE, FEMALE, OTHERS}", HttpStatus.BAD_REQUEST),
+    INVALID_ORDERSTATUS(400, "order status must be any of {PENDING_CONFIRMATION, CANCELED, DELIVERED, SHIPPING}", HttpStatus.BAD_REQUEST),
     INVALID_BLANK(400, "Please do not leave the required information blank", HttpStatus.BAD_REQUEST),
     USER_NOT_EXISTED(404, "User not existed", HttpStatus.NOT_FOUND),
     UNAUTHENTICATED(401, "Unauthenticated", HttpStatus.UNAUTHORIZED),
@@ -40,7 +41,8 @@ public enum ErrorCode {
     DISCOUNT_NOT_EXISTED(400, "discount not existed", HttpStatus.BAD_REQUEST),
     DISCOUNT_DUPLICATE(400,"dulicate discount" ,HttpStatus.BAD_REQUEST ),
     CART_EMPTY(400,"cart is empty" ,HttpStatus.BAD_REQUEST ),
-    DISCOUNT_EXPIRED(400,"discount expired" ,HttpStatus.BAD_REQUEST );
+    DISCOUNT_EXPIRED(400,"discount expired" ,HttpStatus.BAD_REQUEST ),
+    ORDER_NOT_EXISTED(400,"order not existed" ,HttpStatus.BAD_REQUEST );
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

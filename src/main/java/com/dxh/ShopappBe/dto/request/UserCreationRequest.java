@@ -25,7 +25,7 @@ public class UserCreationRequest {
     String password;
 
     @NotBlank(message = "INVALID_NAME")
-    String name;
+    String fullName;
 
     @PhoneNumber(message = "INVALID_PHONENUMBER")
     @NotBlank(message = "INVALID_BLANK")

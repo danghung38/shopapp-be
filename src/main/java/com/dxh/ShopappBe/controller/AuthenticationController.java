@@ -10,11 +10,13 @@ import com.dxh.ShopappBe.dto.response.AuthenticationResponse;
 import com.dxh.ShopappBe.dto.response.IntrospectResponse;
 import com.dxh.ShopappBe.service.interfac.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +33,8 @@ public class AuthenticationController {
     AuthenticationService authenticationService;
 
     //tạo token khi login
+    @Operation(method = "POST", summary = "login account",
+            description = "Login and generate token")
     @PostMapping("/login")
     ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request){
         var result = authenticationService.authenticate(request);
@@ -40,6 +44,8 @@ public class AuthenticationController {
                 .build();
     }
 
+    @Operation(method = "POST", summary = "verify token",
+            description = "Check token ")
     @PostMapping("/introspect")
     ApiResponse<IntrospectResponse> authenticate(@RequestBody IntrospectRequest request)
             throws ParseException, JOSEException {
@@ -50,6 +56,8 @@ public class AuthenticationController {
                 .build();
     }
 
+    @Operation(method = "POST", summary = "logout account",
+            description = "Logout and delete token")
     @PostMapping("/logout")
     ApiResponse<Void> logout(@RequestBody LogoutRequest request)
             throws ParseException, JOSEException {
@@ -59,6 +67,8 @@ public class AuthenticationController {
                 .build();
     }
 
+    @Operation(method = "POST", summary = "Refresh new token",
+            description = "Generate new token with long time")
     @PostMapping("/refresh")
     ApiResponse<AuthenticationResponse> authenticate(@RequestBody RefreshRequest request)
             throws ParseException, JOSEException {

@@ -25,16 +25,15 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
 
-//    private final String[] PUBLIC_ENDPOINTS = {"/users",
-//            "/auth/token", "/auth/introspect", "/auth/logout", "/auth/refresh"
-//    };
-
     private final String[] PUBLIC_POST_ENDPOINTS = {
             "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh", "/users"
     };
 
     private final String[] PUBLIC_GET_ENDPOINTS = {
             "/users/list",
+            "/products",
+            "/products/list",
+            "/categories",
             "/users/list-with-sort-by-multiple-columns",
             "/users/advance-search-with-specification"
     };
@@ -65,9 +64,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request ->
-                        request.requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
+                        request
+                                .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
                                 .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
                                 .requestMatchers(API_DOC_ENDPOINTS).permitAll()
+//                                websocket
+                                .requestMatchers("/ws/**", "/topic/**", "/queue/**", "/user/**").permitAll()
+                                .requestMatchers("/admin-notify.html").permitAll()
 //                                .requestMatchers(API_TEST).permitAll()
                                 .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 ->

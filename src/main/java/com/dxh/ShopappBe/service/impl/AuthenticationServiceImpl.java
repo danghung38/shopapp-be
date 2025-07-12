@@ -36,6 +36,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -91,11 +92,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         if (!authenticated)
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         var token = generateToken(user);
+        String roles = user.getRoles()
+                .stream()
+                .map(role -> role.getName().toString()) // Chuyển mỗi Role thành chuỗi
+                .collect(Collectors.joining(" "));
 
         return AuthenticationResponse.builder()
+                .role(roles)
                 .token(token)
                 .authenticated(true)
-                .userId(user.getId())
+                .fullName(user.getFullName())
+                .username(user.getUsername())
                 .build();
     }
 
