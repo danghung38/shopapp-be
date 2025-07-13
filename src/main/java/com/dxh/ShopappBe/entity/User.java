@@ -30,6 +30,7 @@ public class User extends AbstractEntity<Long> {
 
     String fullName;
 
+    @Column(unique = true, nullable = false)
     String email;
 
     String avatar;
@@ -38,6 +39,9 @@ public class User extends AbstractEntity<Long> {
     String phoneNumber;
 
     String password;
+
+    @Column(name = "enabled")
+    Boolean enabled;
 
     @DateTimeFormat(pattern = "yyyy/MM/dd")
     LocalDate dob;
@@ -56,5 +60,8 @@ public class User extends AbstractEntity<Long> {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     Cart cart;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    Set<VerificationToken> verificationToken;
 
 }

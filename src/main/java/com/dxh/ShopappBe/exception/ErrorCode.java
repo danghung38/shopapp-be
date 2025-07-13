@@ -15,6 +15,7 @@ public enum ErrorCode {
     INVALID_PASSWORD(400, "Password must be at least {min} characters", HttpStatus.BAD_REQUEST),
     INVALID_NAME(400, "Name cannot be left blank", HttpStatus.BAD_REQUEST),
     INVALID_PHONENUMBER(400, "Enter correct phone number format", HttpStatus.BAD_REQUEST),
+    INVALID_EMAIL(400, "Enter correct email format", HttpStatus.BAD_REQUEST),
     INVALID_GENDER(400, "gender must be any of {MALE, FEMALE, OTHERS}", HttpStatus.BAD_REQUEST),
     INVALID_ORDERSTATUS(400, "order status must be any of {PENDING_CONFIRMATION, CANCELED, DELIVERED, SHIPPING}", HttpStatus.BAD_REQUEST),
     INVALID_BLANK(400, "Please do not leave the required information blank", HttpStatus.BAD_REQUEST),
@@ -42,7 +43,12 @@ public enum ErrorCode {
     DISCOUNT_DUPLICATE(400,"dulicate discount" ,HttpStatus.BAD_REQUEST ),
     CART_EMPTY(400,"cart is empty" ,HttpStatus.BAD_REQUEST ),
     DISCOUNT_EXPIRED(400,"discount expired" ,HttpStatus.BAD_REQUEST ),
-    ORDER_NOT_EXISTED(400,"order not existed" ,HttpStatus.BAD_REQUEST );
+    ORDER_NOT_EXISTED(400,"order not existed" ,HttpStatus.BAD_REQUEST ),
+    EMAIL_EXISTED(400, "email existed",HttpStatus.BAD_REQUEST ),
+    SEND_FAILED(400,"Send email verify failed" ,HttpStatus.BAD_REQUEST ),
+    INVALID_VERIFY_KEY(400,"verify key not match" ,HttpStatus.BAD_REQUEST ),
+    VERIFY_KEY_EXPIRED(400,"verify key expiredd" ,HttpStatus.BAD_REQUEST ),
+    ALREADY_VERIFIED(400,"user already verified" ,HttpStatus.BAD_REQUEST );
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

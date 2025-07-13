@@ -37,7 +37,7 @@ public class CartItemController {
                 .build();
     }
 
-    @PostMapping
+
     @Operation(method = "DELETE", summary = "delete cart item",
             description = "Delete cart item from cart")
     @DeleteMapping("/{cartItemId}")

@@ -5,6 +5,7 @@ import com.dxh.ShopappBe.validator.DobConstraint;
 import com.dxh.ShopappBe.validator.GenderSubset;
 import com.dxh.ShopappBe.validator.PhoneNumber;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -30,6 +31,10 @@ public class UserCreationRequest {
     @PhoneNumber(message = "INVALID_PHONENUMBER")
     @NotBlank(message = "INVALID_BLANK")
     String phoneNumber;
+
+    @Email(message = "INVALID_EMAIL")
+    @NotBlank(message = "INVALID_BLANK")
+    String email;
 
 
 //    @EnumValue(name = "gender", enumClass = Gender.class)

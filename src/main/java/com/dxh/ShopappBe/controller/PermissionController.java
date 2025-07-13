@@ -5,10 +5,12 @@ import com.dxh.ShopappBe.dto.request.PermissionRequest;
 import com.dxh.ShopappBe.dto.response.ApiResponse;
 import com.dxh.ShopappBe.dto.response.PermissionResponse;
 import com.dxh.ShopappBe.service.interfac.PermissionService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +23,9 @@ import java.util.List;
 public class PermissionController {
     PermissionService permissionService;
 
+    @Operation(method = "POST", summary = "Create permission",
+            description = "Create new permission")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
     ApiResponse<PermissionResponse> create(@RequestBody PermissionRequest request){
         return ApiResponse.<PermissionResponse>builder()
@@ -29,6 +34,9 @@ public class PermissionController {
                 .build();
     }
 
+    @Operation(method = "GET", summary = "Get all permission",
+            description = "Get all permission")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     ApiResponse<List<PermissionResponse>> getAll(){
         return ApiResponse.<List<PermissionResponse>>builder()
@@ -36,6 +44,9 @@ public class PermissionController {
                 .build();
     }
 
+    @Operation(method = "DELETE", summary = "Delete permission",
+            description = "Delete permission by id")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{permission}")
     ApiResponse<Void> delete(@PathVariable String permission){
         permissionService.delete(permission);

@@ -30,11 +30,14 @@ public class ProductController {
 
     ProductService productService;
 
+    @Operation(method = "POST", summary = "Create product",
+            description = "Create new product")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
     ApiResponse<ProductCreateResponse> createProduct(@RequestPart("product") @Valid ProductCreateRequest productCreateRequest,
                                                      @RequestPart("file") MultipartFile productImage) {
 
-        log.info(productCreateRequest.toString());
+//        log.info(productCreateRequest.toString());
         return ApiResponse.<ProductCreateResponse>builder()
                 .code(HttpStatus.CREATED.value())
                 .message("Successfully created new user")
@@ -42,6 +45,8 @@ public class ProductController {
                 .build();
     }
 
+    @Operation(method = "GET", summary = "Get product",
+            description = "Get product by id")
     @GetMapping("/{productId}")
     public ApiResponse<ProductResponse> getProductById(@Min (value = 1,message = "id must be greater or equal than 1")@PathVariable("productId") Long productId) {
         return ApiResponse.<ProductResponse>builder()
@@ -50,6 +55,9 @@ public class ProductController {
                 .build();
     }
 
+    @Operation(method = "PUT", summary = "Update product",
+            description = "Update product")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PutMapping("/update-product/{productId}")
     public ApiResponse<?> updateProduct(@PathVariable("productId") Long productId,
                                         @RequestPart("product") ProductUpdateRequest request,
@@ -60,6 +68,9 @@ public class ProductController {
                 .build();
     }
 
+    @Operation(method = "DELETE", summary = "Delete product",
+            description = "Delete product by id")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{productId}")
     public ApiResponse<?> deleteProduct(@PathVariable("productId") Long productId) {
         productService.deleteProductById(productId);
@@ -69,6 +80,8 @@ public class ProductController {
                 .build();
     }
 
+    @Operation(method = "GET", summary = "Get product list ",
+            description = "Get product list and search")
     @GetMapping("/list")
     public ApiResponse<PageResponse<List<ProductResponse>>> advanceSearchWithSpecifications(@RequestParam(defaultValue = "1", required = false) Integer pageNo,
                                                                            @Min(value = 1,message = "pageSize must be greater than 1") @RequestParam(defaultValue = "20", required = false) Integer pageSize,

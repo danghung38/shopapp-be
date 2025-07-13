@@ -1,5 +1,7 @@
 package com.dxh.ShopappBe.controller;
 
+import com.dxh.ShopappBe.dto.request.ForgotPasswordRequest;
+import com.dxh.ShopappBe.dto.request.ResetPasswordRequest;
 import com.dxh.ShopappBe.dto.request.UserCreationRequest;
 import com.dxh.ShopappBe.dto.response.ApiResponse;
 import com.dxh.ShopappBe.dto.response.PageResponse;
@@ -36,13 +38,32 @@ public class UserController {
             description = "Send a request via this API to create new user")
     @PostMapping
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request){
-        ApiResponse<UserResponse> apiResponse = new ApiResponse<>();
-
-
         return ApiResponse.<UserResponse>builder()
                 .code(HttpStatus.CREATED.value())
                 .message("Successfully created new user")
                 .result(userService.createUser(request))
+                .build();
+    }
+
+    @Operation(method = "POST", summary = "Forgot password",
+            description = "Fogot password")
+    @PostMapping("/forgot-password")
+    ApiResponse<?> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request){
+        userService.forgotPassword(request);
+        return ApiResponse.<UserResponse>builder()
+                .code(HttpStatus.CREATED.value())
+                .message("Send otp reset password successful")
+                .build();
+    }
+
+    @Operation(method = "POST", summary = "Reset password",
+            description = "Reset password")
+    @PostMapping("/reset-password")
+    ApiResponse<?> resetPassword(@RequestBody @Valid ResetPasswordRequest request){
+        userService.resetPassword(request);
+        return ApiResponse.<UserResponse>builder()
+                .code(HttpStatus.CREATED.value())
+                .message("Reset password successful")
                 .build();
     }
 
@@ -62,18 +83,18 @@ public class UserController {
     //xác thực email
     @Operation(summary = "Confirm Email", description = "Confirm email for account")
     @GetMapping("/confirm-email")
-    public void confirmEmail(@RequestParam String secretCode, HttpServletResponse response) throws IOException {
-        log.info("Confirm email for account with secretCode: {}", secretCode);
-
-
+    public void confirmEmail(@RequestParam String secretKey, HttpServletResponse response) throws IOException {
+        log.info("Confirm email for account with secretCode: {}", secretKey);
         try {
-            // TODO check or compare secret code from db
+            userService.verifyRegister(secretKey);
+            response.sendRedirect("http://localhost:8080/api/admin-notify.html?verify=success");
         } catch (Exception e) {
-            log.error("Verification fail", e.getMessage(), e);
-        } finally {
-            response.sendRedirect("https://tayjava.vn/wp-admin/");
+            log.error("VerificationToken fail", e.getMessage(), e);
+            response.sendRedirect("http://localhost:8080/api/admin-notify.html?verify=fail");
         }
     }
+
+//    quên mật khẩu
 
 
     @Operation(summary = "Get list of users per pageNo and sort by one column", description = "Send a request via this API to get user list by pageNo and pageSize")

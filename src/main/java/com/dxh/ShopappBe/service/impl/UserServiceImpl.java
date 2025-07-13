@@ -1,19 +1,21 @@
 package com.dxh.ShopappBe.service.impl;
 
+import com.dxh.ShopappBe.dto.request.ForgotPasswordRequest;
+import com.dxh.ShopappBe.dto.request.ResetPasswordRequest;
 import com.dxh.ShopappBe.dto.request.UserCreationRequest;
 import com.dxh.ShopappBe.dto.response.PageResponse;
 import com.dxh.ShopappBe.dto.response.UserResponse;
 import com.dxh.ShopappBe.entity.Cart;
 import com.dxh.ShopappBe.entity.User;
+import com.dxh.ShopappBe.entity.VerificationToken;
 import com.dxh.ShopappBe.enums.Role;
+import com.dxh.ShopappBe.enums.VerifyType;
 import com.dxh.ShopappBe.exception.AppException;
 import com.dxh.ShopappBe.exception.ErrorCode;
 import com.dxh.ShopappBe.mapper.UserMapper;
-import com.dxh.ShopappBe.repo.CartRepository;
-import com.dxh.ShopappBe.repo.CustomSearchUserRepository;
-import com.dxh.ShopappBe.repo.RoleRepository;
-import com.dxh.ShopappBe.repo.UserRepository;
+import com.dxh.ShopappBe.repo.*;
 import com.dxh.ShopappBe.repo.specification.UserSpecificationsBuilder;
+import com.dxh.ShopappBe.service.EmailService;
 import com.dxh.ShopappBe.service.interfac.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +30,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.io.IOException;
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,30 +51,56 @@ public class UserServiceImpl implements UserService {
     UserMapper userMapper;
     CustomSearchUserRepository searchUserRepository;
     CartRepository cartRepository;
+    EmailService emailService;
+    VerificationTokenRepository vrRepository;
 
     static Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "username", "email", "phoneNumber", "name");
 
 
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional
     @Override
     public UserResponse createUser(UserCreationRequest request){
         log.info("Creating user");
+        //        kiểm tra email
+        userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
+            if (!user.getEnabled()) {
+                userRepository.delete(user); // Xoá user chưa xác minh
+            } else {
+                throw new AppException(ErrorCode.EMAIL_EXISTED);
+            }
+        });
+
+//        kiểm tra username
         if (userRepository.existsByUsername(request.getUsername()))
             throw new AppException(ErrorCode.USER_EXISTED);
 
+//k         kiểm tra sdt
         if (userRepository.existsByPhoneNumber(request.getPhoneNumber()))
             throw new AppException(ErrorCode.PHONE_EXISTED);
 
+//        lưu tạm thời enabled=false
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-
+        user.setEnabled(false);
         user.setRoles(Set.of(
                 roleRepository.findByName(Role.USER.name())
                         .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED))
         ));
-
         User savedUser = userRepository.save(user);
 
+//        gửi mail verify
+        String secretCode = UUID.randomUUID().toString();
+        vrRepository.save(VerificationToken.builder()
+                        .secretKey(secretCode)
+                        .user(user)
+                        .verifyType(VerifyType.REGISTER)
+                        .expiryDate(LocalDateTime.now().plusMinutes(30))
+                .build());
+        try {
+            emailService.sendVerificationEmail(request.getEmail(),request.getFullName(),secretCode);
+        }catch (IOException e){
+            throw new AppException(ErrorCode.SEND_FAILED);
+        }
 //        tạo giỏ hàng
         Cart cart = Cart.builder()
                 .user(savedUser)
@@ -164,5 +192,85 @@ public class UserServiceImpl implements UserService {
                 .items(userResponseList)
                 .totalElements(users.getTotalElements())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void verifyRegister(String secretKey) {
+        VerificationToken vt = vrRepository.findBySecretKeyAndVerifyType(secretKey, VerifyType.REGISTER)
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_VERIFY_KEY));
+
+        if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new AppException(ErrorCode.VERIFY_KEY_EXPIRED);
+        }
+
+        User user = vt.getUser();
+        if (user.getEnabled()) {
+            throw new AppException(ErrorCode.ALREADY_VERIFIED);
+        }
+
+        user.setEnabled(true);
+        userRepository.save(user);
+
+        // Xoá token để tránh dùng lại
+        vrRepository.delete(vt);
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .filter(User::getEnabled)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        // Xoá token cũ (nếu cần)
+        vrRepository.deleteByUserAndVerifyType(user, VerifyType.RESET_PASSWORD);
+
+        // Tạo token mới
+        String resetCode = generateAlphanumericCode(6);
+        vrRepository.save(VerificationToken.builder()
+                .secretKey(resetCode)
+                .user(user)
+                .verifyType(VerifyType.RESET_PASSWORD)
+                .expiryDate(LocalDateTime.now().plusMinutes(30))
+                .build());
+
+        // Gửi email
+        try {
+            emailService.sendResetPasswordEmail(user.getEmail(), user.getFullName(), resetCode);
+        }catch (IOException e){
+            throw new AppException(ErrorCode.SEND_FAILED);
+        }
+    }
+
+    @Transactional
+    @Override
+    public void resetPassword(ResetPasswordRequest request) {
+        VerificationToken vt = vrRepository.findBySecretKeyAndVerifyType(request.getResetCode(), VerifyType.RESET_PASSWORD)
+                .orElseThrow(() -> new AppException(ErrorCode.INVALID_VERIFY_KEY));
+
+        if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
+            throw new AppException(ErrorCode.VERIFY_KEY_EXPIRED);
+        }
+
+        User user = vt.getUser();
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        vrRepository.delete(vt); // Xoá token sau khi dùng
+    }
+
+
+    private String generateAlphanumericCode(int length) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder sb = new StringBuilder();
+        Random random = new SecureRandom(); // an toàn hơn Random thường
+
+        for (int i = 0; i < length; i++) {
+            int index = random.nextInt(chars.length());
+            sb.append(chars.charAt(index));
+        }
+
+        return sb.toString();
     }
 }

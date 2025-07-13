@@ -5,10 +5,12 @@ import com.dxh.ShopappBe.dto.request.RoleRequest;
 import com.dxh.ShopappBe.dto.response.ApiResponse;
 import com.dxh.ShopappBe.dto.response.RoleResponse;
 import com.dxh.ShopappBe.service.interfac.RoleService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +23,9 @@ import java.util.List;
 public class RoleController {
     RoleService roleService;
 
+    @Operation(method = "POST", summary = "Create role",
+            description = "Create new role")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
     ApiResponse<RoleResponse> create(@RequestBody RoleRequest request){
         return ApiResponse.<RoleResponse>builder()
@@ -28,6 +33,9 @@ public class RoleController {
                 .build();
     }
 
+    @Operation(method = "GET", summary = "Get all role",
+            description = "Get all role")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     ApiResponse<List<RoleResponse>> getAll(){
         return ApiResponse.<List<RoleResponse>>builder()
@@ -35,6 +43,9 @@ public class RoleController {
                 .build();
     }
 
+    @Operation(method = "DELETE", summary = "Delete role",
+            description = "Delete role by id")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @DeleteMapping("/{roleId}")
     ApiResponse<Void> delete(@PathVariable Long roleId){
         roleService.delete(roleId);

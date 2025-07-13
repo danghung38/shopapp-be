@@ -22,6 +22,7 @@ spring:
 #    apiKey: ${SENDGRID_API_KEY}
     fromEmail: mkvht8@gmail.com
     templateId: d-d82439f102b74bc2b935fed16fa0548f
+    resetPasswordId: d-b4e100ac2dbd4024a249240aff3035d5
     verificationLink: http://localhost:8080/api/users/confirm-email
 
 jwt:

@@ -8,12 +8,14 @@ import com.dxh.ShopappBe.enums.Gender;
 import com.dxh.ShopappBe.enums.OrderStatus;
 import com.dxh.ShopappBe.service.interfac.OrderService;
 import com.dxh.ShopappBe.validator.OrderStatusSubset;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.Min;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +29,9 @@ public class OrderController {
 
     OrderService orderService;
 
+    @Operation(method = "POST", summary = "Create order",
+            description = "Create new order")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_USER')")
     @PostMapping
     public ApiResponse<?> create(@RequestBody OrderCreateRequest orderCreateRequest) {
         return ApiResponse.<OrderResponse>builder()
@@ -36,6 +41,9 @@ public class OrderController {
                 .build();
     }
 
+    @Operation(method = "GET", summary = "Get order",
+            description = "Get order by orderId")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_USER')")
     @GetMapping("/{orderId}")
     public ApiResponse<OrderResponse> getOrderById(@PathVariable("orderId") Long orderId) {
         return ApiResponse.<OrderResponse>builder()
@@ -45,6 +53,9 @@ public class OrderController {
                 .build();
     }
 
+    @Operation(method = "GET", summary = "Get order list by status",
+            description = "Get order list by status (admin role)")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/status")
     public ApiResponse<?> getOrderByStatus(@RequestParam(defaultValue = "1", required = false) Integer pageNo,
                                            @RequestParam(defaultValue = "20", required = false) Integer pageSize,
@@ -58,6 +69,9 @@ public class OrderController {
                 .build();
     }
 
+    @Operation(method = "GET", summary = "Get order list ",
+            description = "Get order list of currently account")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN') or hasAuthority('ROLE_USER')")
     @GetMapping("/myorder")
     public ApiResponse<?> getMyOrder(@RequestParam(defaultValue = "1", required = false) Integer pageNo,
                                            @RequestParam(defaultValue = "20", required = false) Integer pageSize,
@@ -69,6 +83,9 @@ public class OrderController {
                 .build();
     }
 
+    @Operation(method = "GET", summary = "Get order by userID ",
+            description = "Get order list by userID")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/users/{id}")
     public ApiResponse<?> getOrderByUserId(@RequestParam(defaultValue = "1", required = false) Integer pageNo,
                                      @RequestParam(defaultValue = "20", required = false) Integer pageSize,
@@ -81,6 +98,9 @@ public class OrderController {
                 .build();
     }
 
+    @Operation(method = "GET", summary = "Get all order ",
+            description = "Get all order by admin")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping("/list")
     public ApiResponse<?> getAllOrder(@RequestParam(defaultValue = "1", required = false) Integer pageNo,
                                       @RequestParam(defaultValue = "20", required = false) Integer pageSize,

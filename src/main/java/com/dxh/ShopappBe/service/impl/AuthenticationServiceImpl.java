@@ -91,6 +91,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         if (!authenticated)
             throw new AppException(ErrorCode.UNAUTHENTICATED);
+        if(!user.getEnabled())
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
         var token = generateToken(user);
         String roles = user.getRoles()
                 .stream()

@@ -31,8 +31,13 @@ public class EmailService {
     @Value("${spring.sendGrid.templateId}")
     private String templateId;
 
+    @Value("${spring.sendGrid.resetPasswordId}")
+    private String resetPasswordId;
+
     @Value("${spring.sendGrid.verificationLink}")
     private String verificationLink;
+
+
 
     /**
      * Send simple email with sendGrid
@@ -71,7 +76,7 @@ public class EmailService {
      * @param to
      * @param name
      */
-    public void sendVerificationEmail(String to, String name) throws IOException {
+    public void sendVerificationEmail(String to, String name, String secretKey) throws IOException {
         log.info("Sending verification email for name={}", name);
 
         Email fromEmail = new Email(from, "Hùng Java");
@@ -79,15 +84,15 @@ public class EmailService {
         String subject = "Xác thực tài khoản";
 
         // Generate secret code and save to db
-        String secretCode = UUID.randomUUID().toString();
-        log.info("secretCode = {}", secretCode);
+//        String secretCode = UUID.randomUUID().toString();
+        log.info("secretCode = {}", secretKey);
 
         // TOD0 save secretCode to db
 
         // Tạo dynamic template data
         Map<String, String> dynamicTemplateData = new HashMap<>();
         dynamicTemplateData.put("name", name);
-        dynamicTemplateData.put("verify_link", verificationLink + "?secretCode=" + secretCode);
+        dynamicTemplateData.put("verify_link", verificationLink + "?secretKey=" + secretKey);
 
         Mail mail = new Mail();
         mail.setFrom(fromEmail);
@@ -107,9 +112,45 @@ public class EmailService {
         request.setBody(mail.build());
         Response response = sendGrid.api(request);
         if (response.getStatusCode() == 202) {
-            log.info("Verification sent successfully");
+            log.info("VerificationToken sent successfully");
         } else {
-            log.error("Verification sent failed");
+            log.error("VerificationToken sent failed");
+        }
+    }
+
+
+    public void sendResetPasswordEmail(String to, String name, String resetCode) throws IOException {
+        log.info("Sending verification email for name={}", name);
+
+        Email fromEmail = new Email(from, "ĐXH SHOP");
+        Email toEmail = new Email(to);
+        String subject = "Khôi phục mật khẩu";
+
+        Map<String, String> dynamicTemplateData = new HashMap<>();
+        dynamicTemplateData.put("name", name);
+        dynamicTemplateData.put("reset_code",resetCode);
+
+        Mail mail = new Mail();
+        mail.setFrom(fromEmail);
+        mail.setSubject(subject);
+        Personalization personalization = new Personalization();
+        personalization.addTo(toEmail);
+
+        // Add dynamic template data
+        dynamicTemplateData.forEach(personalization::addDynamicTemplateData);
+
+        mail.addPersonalization(personalization);
+        mail.setTemplateId(resetPasswordId); // Template ID từ SendGrid
+
+        Request request = new Request();
+        request.setMethod(Method.POST);
+        request.setEndpoint("mail/send");
+        request.setBody(mail.build());
+        Response response = sendGrid.api(request);
+        if (response.getStatusCode() == 202) {
+            log.info("VerificationToken sent successfully");
+        } else {
+            log.error("VerificationToken sent failed");
         }
     }
 }
