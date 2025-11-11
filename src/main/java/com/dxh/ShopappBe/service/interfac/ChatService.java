@@ -16,4 +16,6 @@ public interface ChatService {
     List<String> getAllUsernameChat();
 
     List<ChatMessageResponse> getHistoryByUsername(String username);
+
+    void markMessagesAsRead(String name, String fromUser);
 }

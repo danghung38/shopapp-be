@@ -1,6 +1,7 @@
 package com.dxh.ShopappBe.controller;
 
 import com.dxh.ShopappBe.dto.request.ChatMessageRequest;
+import com.dxh.ShopappBe.dto.request.MarkReadRequest;
 import com.dxh.ShopappBe.dto.response.ApiResponse;
 import com.dxh.ShopappBe.dto.response.CategoryResponse;
 import com.dxh.ShopappBe.dto.response.ChatMessageResponse;
@@ -13,10 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -33,6 +31,14 @@ public class ChatController {
     @MessageMapping("/chat") // Gửi đến: /app/chat
     public void handleChat(@Payload ChatMessageRequest request, Principal sender) {
         chatService.createChatMessage(request,sender);
+    }
+
+    @PatchMapping("/chats/mark-read")
+    public ApiResponse<?> markMessagesAsRead(@RequestBody MarkReadRequest request, Principal principal) {
+        chatService.markMessagesAsRead(principal.getName(), request.getFromUser());
+        return ApiResponse.builder()
+                .message("mark already read successful")
+                .build();
     }
 
     @GetMapping

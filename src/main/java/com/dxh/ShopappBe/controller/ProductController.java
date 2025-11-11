@@ -35,7 +35,7 @@ public class ProductController {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @PostMapping
     ApiResponse<ProductCreateResponse> createProduct(@RequestPart("product") @Valid ProductCreateRequest productCreateRequest,
-                                                     @RequestPart("file") MultipartFile productImage) {
+                                                     @RequestPart(value = "file") MultipartFile productImage) {
 
 //        log.info(productCreateRequest.toString());
         return ApiResponse.<ProductCreateResponse>builder()
@@ -61,7 +61,7 @@ public class ProductController {
     @PutMapping("/update-product/{productId}")
     public ApiResponse<?> updateProduct(@PathVariable("productId") Long productId,
                                         @RequestPart("product") ProductUpdateRequest request,
-                                        @RequestPart("file") MultipartFile productImage){
+                                        @RequestPart(value = "file",required = false) MultipartFile productImage){
         return  ApiResponse.<ProductUpdateResponse>builder()
                 .code(HttpStatus.OK.value())
                 .result(productService.updateProduct(productId,request,productImage))

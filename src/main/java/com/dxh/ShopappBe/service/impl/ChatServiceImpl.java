@@ -42,7 +42,7 @@ public class ChatServiceImpl implements ChatService {
         chatRepository.save(Chat.builder()
                         .recipient(chat.getTo())
                         .sender(chat.getFrom())
-                        .createAt(chat.getTimestamp())
+                        .createdAt(chat.getTimestamp())
                         .content(chat.getContent())
                         .isRead(false)
                 .build());
@@ -85,6 +85,13 @@ public class ChatServiceImpl implements ChatService {
         List<Chat> chats = chatRepository.findChatHistory(username,"admin");
         return chats.stream()
                 .map(chatMapper::chatToChatMessageResponse).toList();
+    }
+
+    @Override
+    public void markMessagesAsRead(String name, String fromUser) {
+        List<Chat> unreadMessages = chatRepository.findUnreadMessages(fromUser, name);
+        unreadMessages.forEach(chat -> chat.setRead(true));
+        chatRepository.saveAll(unreadMessages);
     }
 
 

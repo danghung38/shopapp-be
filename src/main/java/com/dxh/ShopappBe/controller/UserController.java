@@ -1,11 +1,10 @@
 package com.dxh.ShopappBe.controller;
 
-import com.dxh.ShopappBe.dto.request.ForgotPasswordRequest;
-import com.dxh.ShopappBe.dto.request.ResetPasswordRequest;
-import com.dxh.ShopappBe.dto.request.UserCreationRequest;
+import com.dxh.ShopappBe.dto.request.*;
 import com.dxh.ShopappBe.dto.response.ApiResponse;
 import com.dxh.ShopappBe.dto.response.PageResponse;
 import com.dxh.ShopappBe.dto.response.UserResponse;
+import com.dxh.ShopappBe.dto.response.UserUpdateResponse;
 import com.dxh.ShopappBe.service.AwsS3Service;
 import com.dxh.ShopappBe.service.interfac.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,6 +41,18 @@ public class UserController {
                 .code(HttpStatus.CREATED.value())
                 .message("Successfully created new user")
                 .result(userService.createUser(request))
+                .build();
+    }
+
+    @Operation(method = "PUT", summary = "Update my user",
+            description = "Send a request via this API to update my user")
+    @PutMapping
+    ApiResponse<UserUpdateResponse> updateUser(@RequestPart("user") @Valid UserUpdateRequest request,
+                                               @RequestPart(value = "file",required = false) MultipartFile userImage){
+        return ApiResponse.<UserUpdateResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Successfully update user")
+                .result(userService.updateMyUser(request,userImage))
                 .build();
     }
 

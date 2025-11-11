@@ -48,7 +48,8 @@ public enum ErrorCode {
     SEND_FAILED(400,"Send email verify failed" ,HttpStatus.BAD_REQUEST ),
     INVALID_VERIFY_KEY(400,"verify key not match" ,HttpStatus.BAD_REQUEST ),
     VERIFY_KEY_EXPIRED(400,"verify key expiredd" ,HttpStatus.BAD_REQUEST ),
-    ALREADY_VERIFIED(400,"user already verified" ,HttpStatus.BAD_REQUEST );
+    ALREADY_VERIFIED(400,"user already verified" ,HttpStatus.BAD_REQUEST ),
+    NOT_FOUND_IMAGE(400,"Image not found" ,HttpStatus.BAD_REQUEST );
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

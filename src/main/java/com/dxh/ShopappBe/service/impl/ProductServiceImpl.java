@@ -54,6 +54,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ProductCreateResponse createProduct(ProductCreateRequest productCreateRequest, MultipartFile productImage) {
+        if(productImage == null || productImage.isEmpty()){
+            throw new AppException(ErrorCode.NOT_FOUND_IMAGE);
+        }
         Product product = productMapper.toProduct(productCreateRequest);
         product.setCategory(categoryRepository.findById(productCreateRequest.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXIST)));
@@ -91,7 +94,9 @@ public class ProductServiceImpl implements ProductService {
         product.setQuantity(productUpdateRequest.getQuantity());
         product.setCategory(categoryRepository.findById(productUpdateRequest.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXIST)));
-        product.setImage(awsS3Service.saveImageToS3(productImage));
+        if(productImage != null && !productImage.isEmpty()){
+            product.setImage(awsS3Service.saveImageToS3(productImage));
+        }
         Product savedProduct = productRepository.save(product);
 
         return productMapper.toProductUpdateResponse(savedProduct);

@@ -3,8 +3,10 @@ package com.dxh.ShopappBe.service.impl;
 import com.dxh.ShopappBe.dto.request.ForgotPasswordRequest;
 import com.dxh.ShopappBe.dto.request.ResetPasswordRequest;
 import com.dxh.ShopappBe.dto.request.UserCreationRequest;
+import com.dxh.ShopappBe.dto.request.UserUpdateRequest;
 import com.dxh.ShopappBe.dto.response.PageResponse;
 import com.dxh.ShopappBe.dto.response.UserResponse;
+import com.dxh.ShopappBe.dto.response.UserUpdateResponse;
 import com.dxh.ShopappBe.entity.Cart;
 import com.dxh.ShopappBe.entity.User;
 import com.dxh.ShopappBe.entity.VerificationToken;
@@ -15,6 +17,7 @@ import com.dxh.ShopappBe.exception.ErrorCode;
 import com.dxh.ShopappBe.mapper.UserMapper;
 import com.dxh.ShopappBe.repo.*;
 import com.dxh.ShopappBe.repo.specification.UserSpecificationsBuilder;
+import com.dxh.ShopappBe.service.AwsS3Service;
 import com.dxh.ShopappBe.service.EmailService;
 import com.dxh.ShopappBe.service.interfac.UserService;
 import lombok.AccessLevel;
@@ -25,10 +28,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -53,6 +58,7 @@ public class UserServiceImpl implements UserService {
     CartRepository cartRepository;
     EmailService emailService;
     VerificationTokenRepository vrRepository;
+    AwsS3Service awsS3Service;
 
     static Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "username", "email", "phoneNumber", "name");
 
@@ -260,6 +266,18 @@ public class UserServiceImpl implements UserService {
         vrRepository.delete(vt); // Xoá token sau khi dùng
     }
 
+    @Override
+    public UserUpdateResponse updateMyUser(UserUpdateRequest request, MultipartFile userImage) {
+        User user = checkUser();
+        if(userImage != null && !userImage.isEmpty()){
+            user.setAvatar(awsS3Service.saveImageToS3(userImage));
+        }
+        user.setFullName(request.getFullName());
+        user.setDob(request.getDob());
+        user.setGender(user.getGender());
+        return userMapper.toUserUpdateResponse(userRepository.save(user));
+    }
+
 
     private String generateAlphanumericCode(int length) {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -272,5 +290,11 @@ public class UserServiceImpl implements UserService {
         }
 
         return sb.toString();
+    }
+
+    private User checkUser(){
+        return userRepository.findByUsername(
+                SecurityContextHolder.getContext().getAuthentication().getName()
+        ).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
     }
 }

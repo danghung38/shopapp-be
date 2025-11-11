@@ -1,0 +1,36 @@
+package com.dxh.ShopappBe.dto.request;
+
+import com.dxh.ShopappBe.enums.Gender;
+import com.dxh.ShopappBe.validator.DobConstraint;
+import com.dxh.ShopappBe.validator.GenderSubset;
+import com.dxh.ShopappBe.validator.PhoneNumber;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
+import java.time.LocalDate;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class UserUpdateRequest {
+
+    @NotBlank(message = "INVALID_NAME")
+    String fullName;
+
+
+    //    @EnumValue(name = "gender", enumClass = Gender.class)
+    @GenderSubset(anyOf = {Gender.MALE, Gender.FEMALE, Gender.OTHER},message = "INVALID_GENDER")
+    String gender;
+
+
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
+    @DobConstraint(min = 18, message = "INVALID_DOB")
+    LocalDate dob;
+}

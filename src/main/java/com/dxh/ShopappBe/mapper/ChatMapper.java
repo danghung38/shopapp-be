@@ -8,7 +8,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface ChatMapper {
 
-    @Mapping(target = "timestamp", source = "createAt")
+    @Mapping(target = "timestamp", source = "createdAt")
     @Mapping(target = "to", source = "recipient")
     @Mapping(target = "from", source = "sender")
     ChatMessageResponse chatToChatMessageResponse(Chat chat);
