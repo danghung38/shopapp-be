@@ -33,7 +33,7 @@ public class ChatController {
         chatService.createChatMessage(request,sender);
     }
 
-    @PatchMapping("/chats/mark-read")
+    @PatchMapping("/mark-read")
     public ApiResponse<?> markMessagesAsRead(@RequestBody MarkReadRequest request, Principal principal) {
         chatService.markMessagesAsRead(principal.getName(), request.getFromUser());
         return ApiResponse.builder()

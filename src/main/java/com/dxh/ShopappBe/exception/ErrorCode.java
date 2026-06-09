@@ -49,7 +49,14 @@ public enum ErrorCode {
     INVALID_VERIFY_KEY(400,"verify key not match" ,HttpStatus.BAD_REQUEST ),
     VERIFY_KEY_EXPIRED(400,"verify key expiredd" ,HttpStatus.BAD_REQUEST ),
     ALREADY_VERIFIED(400,"user already verified" ,HttpStatus.BAD_REQUEST ),
-    NOT_FOUND_IMAGE(400,"Image not found" ,HttpStatus.BAD_REQUEST );
+    NOT_FOUND_IMAGE(400,"Image not found" ,HttpStatus.BAD_REQUEST ),
+    GALLERY_NOT_EXISTED(400, "gallery not existed", HttpStatus.BAD_REQUEST),
+    QUESTION_NOT_EXISTED(400, "question not existed", HttpStatus.BAD_REQUEST),
+    QUESTION_ALREADY_ANSWERED(400, "question already answered", HttpStatus.BAD_REQUEST),
+    REVIEW_NOT_EXISTED(400, "review not existed", HttpStatus.BAD_REQUEST),
+    REVIEW_DUPLICATE(400, "you already reviewed this product", HttpStatus.BAD_REQUEST),
+    REVIEW_NOT_PURCHASED(400, "you must purchase and receive this product before reviewing", HttpStatus.BAD_REQUEST),
+    INVALID_RATING(400, "rating must be between 1 and 5", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;

@@ -36,7 +36,11 @@ public class SecurityConfig {
             "/products/list",
             "/categories",
             "/users/list-with-sort-by-multiple-columns",
-            "/users/advance-search-with-specification"
+            "/users/advance-search-with-specification",
+            "/galleries/product/**",
+            "/questions/product/**",
+            "/reviews/product/**",
+            "/reviews/*"
     };
 
     private final String[] API_TEST = {

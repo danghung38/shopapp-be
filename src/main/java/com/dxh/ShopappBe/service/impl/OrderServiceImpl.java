@@ -130,7 +130,7 @@ public class OrderServiceImpl implements OrderService {
             discountRepository.save(discount);
         }
 
-        webSocketService.sendNewOrderNotification(orderResponse.getId(),user.getFullName());
+        webSocketService.sendNewOrderNotification(order, user);
 
         // 9. Trả về kết quả
         return orderResponse;
@@ -226,5 +226,28 @@ public class OrderServiceImpl implements OrderService {
         User user = userRepository.findByUsername(name).orElseThrow(
                 () -> new AppException(ErrorCode.USER_NOT_EXISTED));
         return user;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public OrderResponse updateOrderStatus(Long orderId, String status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_EXISTED));
+
+        OrderStatus newStatus = OrderStatus.valueOf(status.toUpperCase());
+        order.setStatus(newStatus);
+
+        if (newStatus == OrderStatus.DELIVERED) {
+            order.setIsPaid(true);
+        }
+
+        Order savedOrder = orderRepository.save(order);
+
+        // Gửi notification tới customer
+        webSocketService.sendOrderStatusNotification(savedOrder, savedOrder.getUser());
+
+        OrderResponse orderResponse = orderMapper.toOrderResponse(savedOrder);
+        orderResponse.setOrderStatus(savedOrder.getStatus().name());
+        return orderResponse;
     }
 }

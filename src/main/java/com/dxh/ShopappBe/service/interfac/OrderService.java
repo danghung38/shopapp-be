@@ -20,4 +20,6 @@ public interface OrderService {
     PageResponse<List<OrderResponse>> getMyOrder(Integer pageNo, Integer pageSize, String sortBy);
 
     PageResponse<List<OrderResponse>> getOrderByUserId(Long id, Integer pageNo, Integer pageSize, String sortBy);
+
+    OrderResponse updateOrderStatus(Long orderId, String status);
 }

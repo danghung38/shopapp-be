@@ -43,7 +43,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // Định nghĩa các "kênh" mà server có thể gửi tin đi
         // /topic: Dành cho thông báo công cộng (một-nhiều)
         // /queue: Dành cho thông báo riêng tư (một-một)
-        registry.enableSimpleBroker("/topic", "/queue","/user");
+        registry.enableSimpleBroker("/topic", "/queue");
 
         // Định nghĩa tiền tố cho các tin nhắn từ client gửi đến server
         // Nếu client gửi đến "/app/admin/connect", nó sẽ được định tuyến

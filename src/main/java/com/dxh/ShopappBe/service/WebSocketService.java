@@ -1,37 +1,65 @@
 package com.dxh.ShopappBe.service;
 
-
-
-import com.dxh.ShopappBe.dto.request.ChatMessageRequest;
 import com.dxh.ShopappBe.dto.response.ChatMessageResponse;
-import lombok.RequiredArgsConstructor;
+import com.dxh.ShopappBe.dto.response.NotificationResponse;
+import com.dxh.ShopappBe.entity.Order;
+import com.dxh.ShopappBe.entity.User;
+import com.dxh.ShopappBe.enums.NotificationType;
+import com.dxh.ShopappBe.service.interfac.NotificationService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
 
 @Service
-@RequiredArgsConstructor
 public class WebSocketService {
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final NotificationService notificationService;
 
-    private void sendNotificationToAdmin(String notification) {
-        // Đây là công cụ đặc biệt do Spring cung cấp để gửi tin nhắn
-        // Hành động chính:
-        // 1. Lấy đối tượng notification
-        // 2. Chuyển nó thành JSON (tự động)
-        // 3. Gửi đến kênh "/topic/admin-notifications"
+    @Autowired
+    public WebSocketService(SimpMessagingTemplate messagingTemplate,
+                            @Lazy NotificationService notificationService) {
+        this.messagingTemplate = messagingTemplate;
+        this.notificationService = notificationService;
+    }
+
+    /**
+     * Gửi thông báo tới tất cả admin qua topic broadcast
+     */
+    public void sendNotificationToAdmin(String notification) {
         messagingTemplate.convertAndSend("/topic/admin-notifications", notification);
     }
 
-    public void sendNewOrderNotification(Long orderId, String customerName) {
-        String notification = "có đơn hàng mới id: "+orderId+" từ +"+customerName;
-        sendNotificationToAdmin(notification);
+    /**
+     * Gửi notification khi có đơn hàng mới:
+     * - Push broadcast cho admin dashboard
+     * - Lưu DB + push riêng tới user đặt hàng (để họ biết đơn đã được tiếp nhận)
+     */
+    public void sendNewOrderNotification(Order order, User customer) {
+        // 1. Push tới admin dashboard (broadcast)
+        String adminMsg = "Đơn hàng mới #" + order.getId() + " từ " + customer.getFullName();
+        sendNotificationToAdmin(adminMsg);
+
+        // 2. Lưu DB + push realtime tới customer
+        String customerMsg = "Đơn hàng #" + order.getId() + " đã được đặt thành công. Chờ xác nhận.";
+        notificationService.createAndSendNotification(customer, customerMsg, NotificationType.ORDER, order);
     }
 
+    /**
+     * Gửi notification khi trạng thái đơn hàng thay đổi (shipping, delivered, canceled)
+     */
+    public void sendOrderStatusNotification(Order order, User customer) {
+        String msg = "Đơn hàng #" + order.getId() + " đã chuyển sang trạng thái: " + order.getStatus().name();
+        notificationService.createAndSendNotification(customer, msg, NotificationType.ORDER, order);
+    }
+
+    /**
+     * Chat: gửi tin nhắn riêng tới 1 user
+     */
     public ChatMessageResponse sendPrivateMessage(String to, String content, Principal sender) {
         String from = sender.getName();
         ChatMessageResponse response = ChatMessageResponse.builder()
@@ -41,14 +69,11 @@ public class WebSocketService {
                 .content(content)
                 .build();
 
-        // Gửi tin nhắn đến người nhận (theo username)
         messagingTemplate.convertAndSendToUser(
-                to, // username người nhận
-                "/queue/messages", // đích đến client đang lắng nghe
+                to,
+                "/queue/messages",
                 response
         );
         return response;
     }
-
-
 }

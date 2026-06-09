@@ -112,4 +112,19 @@ public class OrderController {
                 .build();
     }
 
+    @Operation(method = "PATCH", summary = "Update order status",
+            description = "Admin updates order status (SHIPPING, DELIVERED, CANCELED)")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PatchMapping("/{orderId}/status")
+    public ApiResponse<OrderResponse> updateOrderStatus(
+            @PathVariable Long orderId,
+            @RequestParam @OrderStatusSubset(anyOf = {OrderStatus.PENDING_CONFIRMATION,
+                    OrderStatus.CANCELED, OrderStatus.DELIVERED, OrderStatus.SHIPPING}) String status) {
+        return ApiResponse.<OrderResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("update order status successful")
+                .result(orderService.updateOrderStatus(orderId, status))
+                .build();
+    }
+
 }

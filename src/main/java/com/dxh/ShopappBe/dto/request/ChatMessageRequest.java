@@ -9,6 +9,10 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ChatMessageRequest {
+
+    @jakarta.validation.constraints.NotBlank(message = "INVALID_BLANK")
     String content;
+
+    @jakarta.validation.constraints.NotBlank(message = "INVALID_BLANK")
     String to;
 }

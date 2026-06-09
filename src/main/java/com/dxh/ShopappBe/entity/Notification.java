@@ -36,6 +36,7 @@ public class Notification implements Serializable {
     @Column(name = "message", nullable = false)
     String message;
 
+    @Builder.Default
     @Column(name = "is_read", nullable = false)
     boolean isRead = false;
 
