@@ -40,4 +40,7 @@ public class ProductUpdateRequest {
 
     @NotNull(message = "INVALID_NULL")
     Long categoryId;
+
+    // Cho phép admin chỉnh số đã bán (fake số liệu)
+    Long totalSold;
 }

@@ -1,6 +1,7 @@
 package com.dxh.ShopappBe.dto.response;
 
 import com.dxh.ShopappBe.entity.Role;
+import com.dxh.ShopappBe.enums.Gender;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -19,8 +20,12 @@ import java.util.Set;
 public class UserResponse implements Serializable {
     Long id;
     String username;
-    String name;
+    String fullName;
+    String email;
+    String phoneNumber;
+    String avatar;
+    Gender gender;
     LocalDate dob;
+    Boolean enabled;
     Set<Role> roles;
 }
-

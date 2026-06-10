@@ -30,10 +30,10 @@ public class Chat implements Serializable {
     @Column(nullable = false)
     String recipient; // người nhận (luôn là admin hoặc user)
 
-    @Column(nullable = false)
+    @Column(name = "create_at", nullable = false)
     LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "is_read", nullable = false)
     @Builder.Default
     boolean isRead = false; // đã đọc hay chưa (cho admin đọc sau)
 

@@ -108,6 +108,16 @@ public class UserController {
 //    quên mật khẩu
 
 
+    @Operation(summary = "Get current logged-in user info")
+    @GetMapping("/me")
+    public ApiResponse<UserResponse> getMyInfo() {
+        return ApiResponse.<UserResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("Successfully retrieved current user info")
+                .result(userService.getMyInfo())
+                .build();
+    }
+
     @Operation(summary = "Get list of users per pageNo and sort by one column", description = "Send a request via this API to get user list by pageNo and pageSize")
     @GetMapping("/list")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")

@@ -30,6 +30,10 @@ public class Address extends AbstractEntity<Long> {
     @Builder.Default
     Boolean isDefault=false;
 
+    @Builder.Default
+    @Column(nullable = false)
+    Boolean enabled = true;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     User user;

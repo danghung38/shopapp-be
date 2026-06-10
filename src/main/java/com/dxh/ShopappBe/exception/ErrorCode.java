@@ -21,6 +21,8 @@ public enum ErrorCode {
     INVALID_BLANK(400, "Please do not leave the required information blank", HttpStatus.BAD_REQUEST),
     USER_NOT_EXISTED(404, "User not existed", HttpStatus.NOT_FOUND),
     UNAUTHENTICATED(401, "Unauthenticated", HttpStatus.UNAUTHORIZED),
+    EMAIL_NOT_VERIFIED(401, "Account email is not verified", HttpStatus.UNAUTHORIZED),
+    INVALID_CREDENTIALS(401, "Invalid username or password", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(403, "You do not have permission", HttpStatus.FORBIDDEN),
     INVALID_DOB(400, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
     UPLOAD_FAIL(400, "Error uploading file to S3", HttpStatus.BAD_REQUEST),

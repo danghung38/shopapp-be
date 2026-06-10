@@ -1,7 +1,6 @@
 package com.dxh.ShopappBe.dto.response;
 
-
-
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -11,17 +10,11 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ProductResponse {
-
-    Long id;
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class BestSellingProductResponse {
+    Long productId;
     String nameProduct;
-    String description;
-    Double price;
     String image;
-    Integer quantity;
-    String brand;
-    Double promotionalPrice;
-    String descriptionShort;
-    Long categoryId;
-    Long totalSold;
+    long totalQuantity;
+    double totalRevenue;
 }

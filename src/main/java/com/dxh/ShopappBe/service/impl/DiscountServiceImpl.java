@@ -56,5 +56,16 @@ public class DiscountServiceImpl implements DiscountService {
         discountRepository.save(discount);
     }
 
+    @Override
+    public DiscountResponse updateQuantity(Long id, Long quantity) {
+        Discount discount = discountRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.DISCOUNT_NOT_EXISTED));
+        if (quantity == null || quantity < 0) {
+            throw new AppException(ErrorCode.QUANTITY_INVALID);
+        }
+        discount.setQuantity(quantity);
+        return discountMapper.toDiscountResponse(discountRepository.save(discount));
+    }
+
 
 }

@@ -42,6 +42,15 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public CategoryResponse updateCategory(Long categoryId, CategoryRequest categoryRequest) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXIST));
+        category.setName(categoryRequest.getName());
+        category.setDescription(categoryRequest.getDescription());
+        return categoryMapper.toCategoryResponse(categoryRepository.save(category));
+    }
+
+    @Override
     public void deleteCategory(Long categoryId) {
         categoryRepository.deleteById(categoryId);
         log.info("Delete category id:{}",categoryId);

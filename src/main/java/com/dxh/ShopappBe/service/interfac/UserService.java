@@ -27,4 +27,6 @@ public interface UserService {
     void resetPassword(ResetPasswordRequest request);
 
     UserUpdateResponse updateMyUser(UserUpdateRequest request, MultipartFile userImage);
+
+    UserResponse getMyInfo();
 }

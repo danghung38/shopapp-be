@@ -34,14 +34,15 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public AddressResponse create(AddressCreateRequest addr) {
         User user = checkUser();
-        checkDuplicateAddress(user,addr);
+        checkDuplicateAddress(user, addr);
 
-        Set<Address> address = addressRepository.findByUser_Id(user.getId());
+        Set<Address> existing = addressRepository.findByUser_IdAndEnabledTrue(user.getId());
 
         Address newAddress = addressMapper.toAddress(addr);
         newAddress.setUser(user);
-        if(address.isEmpty()){
-           newAddress.setIsDefault(true);
+        newAddress.setEnabled(true);
+        if (existing.isEmpty()) {
+            newAddress.setIsDefault(true);
         }
         addressRepository.save(newAddress);
         return addressMapper.toAddressResponse(newAddress);
@@ -49,14 +50,14 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     public Set<AddressResponse> getMyAddressList() {
-        return addressRepository.findByUser_Id(checkUser().getId()).stream()
+        return addressRepository.findByUser_IdAndEnabledTrue(checkUser().getId()).stream()
                 .map(addressMapper::toAddressResponse).collect(Collectors.toSet());
     }
 
     @Override
     public AddressResponse update(AddressUpdateRequest addr, Long addrId) {
         User user = checkUser();
-        Address address = addressRepository.findByIdAndUser_Id(addrId,user.getId())
+        Address address = addressRepository.findByIdAndUser_IdAndEnabledTrue(addrId, user.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXITSTED));
 
         address.setFullName(addr.getFullName());
@@ -69,10 +70,29 @@ public class AddressServiceImpl implements AddressService {
         return addressMapper.toAddressResponse(address);
     }
 
+    /**
+     * Soft delete: chỉ tắt enabled, KHÔNG xoá khỏi DB.
+     * Nhờ vậy lịch sử đơn hàng cũ vẫn giữ được thông tin địa chỉ giao hàng.
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long addrId) {
-        addressRepository.deleteByIdAndUser_Id(addrId,checkUser().getId());
+        User user = checkUser();
+        Address address = addressRepository.findByIdAndUser_IdAndEnabledTrue(addrId, user.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXITSTED));
+        address.setEnabled(false);
+        // Nếu địa chỉ bị xoá là mặc định thì cần đặt lại mặc định cho địa chỉ khác (nếu có)
+        if (Boolean.TRUE.equals(address.getIsDefault())) {
+            address.setIsDefault(false);
+            addressRepository.findByUser_IdAndEnabledTrue(user.getId()).stream()
+                    .filter(a -> !a.getId().equals(addrId))
+                    .findFirst()
+                    .ifPresent(a -> {
+                        a.setIsDefault(true);
+                        addressRepository.save(a);
+                    });
+        }
+        addressRepository.save(address);
     }
 
     @Override
@@ -80,14 +100,13 @@ public class AddressServiceImpl implements AddressService {
     public AddressResponse changeDefault(Long id) {
         User user = checkUser();
 
-        // Tìm địa chỉ đang mặc định (nếu có)
-        addressRepository.findByUser_IdAndIsDefaultTrue(user.getId())
+        addressRepository.findByUser_IdAndIsDefaultTrueAndEnabledTrue(user.getId())
                 .ifPresent(oldAddress -> {
                     oldAddress.setIsDefault(false);
                     addressRepository.save(oldAddress);
                 });
 
-        Address address = addressRepository.findByIdAndUser_Id(id,user.getId())
+        Address address = addressRepository.findByIdAndUser_IdAndEnabledTrue(id, user.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXITSTED));
         address.setIsDefault(true);
         addressRepository.save(address);
@@ -97,30 +116,28 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public AddressResponse getMyAddressById(Long id) {
         User user = checkUser();
-        Address address= addressRepository.findByIdAndUser_Id(id,user.getId())
+        Address address = addressRepository.findByIdAndUser_IdAndEnabledTrue(id, user.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_EXITSTED));
         return addressMapper.toAddressResponse(address);
     }
 
-
-    private User checkUser(){
+    private User checkUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         String name = authentication.getName();
-        User user = userRepository.findByUsername(name).orElseThrow(
-                () -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        return user;
+        return userRepository.findByUsername(name)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
     }
 
     private void checkDuplicateAddress(User user, AddressCreateRequest addr) {
-        boolean exists = addressRepository.existsByUser_IdAndCityAndDistrictAndWardsAndSpecificAddressAndFullName(
-                user.getId(),
-                addr.getCity(),
-                addr.getDistrict(),
-                addr.getWards(),
-                addr.getSpecificAddress(),
-                addr.getFullName()
-        );
-
+        boolean exists = addressRepository
+                .existsByUser_IdAndCityAndDistrictAndWardsAndSpecificAddressAndFullNameAndEnabledTrue(
+                        user.getId(),
+                        addr.getCity(),
+                        addr.getDistrict(),
+                        addr.getWards(),
+                        addr.getSpecificAddress(),
+                        addr.getFullName()
+                );
         if (exists) {
             throw new AppException(ErrorCode.ADDRESS_DUPLICATE);
         }

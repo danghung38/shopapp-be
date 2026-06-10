@@ -11,6 +11,7 @@ import com.dxh.ShopappBe.entity.Cart;
 import com.dxh.ShopappBe.entity.User;
 import com.dxh.ShopappBe.entity.VerificationToken;
 import com.dxh.ShopappBe.enums.Role;
+import com.dxh.ShopappBe.enums.Gender;
 import com.dxh.ShopappBe.enums.VerifyType;
 import com.dxh.ShopappBe.exception.AppException;
 import com.dxh.ShopappBe.exception.ErrorCode;
@@ -274,7 +275,9 @@ public class UserServiceImpl implements UserService {
         }
         user.setFullName(request.getFullName());
         user.setDob(request.getDob());
-        user.setGender(user.getGender());
+        if (request.getGender() != null && !request.getGender().isBlank()) {
+            user.setGender(Gender.valueOf(request.getGender()));
+        }
         return userMapper.toUserUpdateResponse(userRepository.save(user));
     }
 
@@ -296,5 +299,10 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByUsername(
                 SecurityContextHolder.getContext().getAuthentication().getName()
         ).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    }
+
+    @Override
+    public UserResponse getMyInfo() {
+        return userMapper.toUserResponse(checkUser());
     }
 }

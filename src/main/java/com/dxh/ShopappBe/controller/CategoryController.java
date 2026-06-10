@@ -60,4 +60,15 @@ public class CategoryController {
                 .message("Delete category successfully")
                 .build();
     }
+
+    @Operation(method = "PUT", summary = "Update category",
+            description = "Update category by ID")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PutMapping("/{categoryId}")
+    ApiResponse<CategoryResponse> update(@PathVariable Long categoryId, @Valid @RequestBody CategoryRequest request){
+        return ApiResponse.<CategoryResponse>builder()
+                .code(HttpStatus.OK.value())
+                .result(categoryService.updateCategory(categoryId, request))
+                .build();
+    }
 }

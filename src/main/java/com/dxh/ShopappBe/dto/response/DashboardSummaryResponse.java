@@ -1,12 +1,8 @@
 package com.dxh.ShopappBe.dto.response;
 
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.io.Serializable;
-
 
 @Getter
 @Setter
@@ -15,9 +11,14 @@ import java.io.Serializable;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserOrderResponse implements Serializable {
-    Long id;
-    String username;
-    String fullName;
+public class DashboardSummaryResponse {
+    long totalProducts;
+    long totalUsers;
+    long totalOrders;
+    long totalDiscounts;
+    double totalRevenue;
+    long pendingOrders;
+    long shippingOrders;
+    long deliveredOrders;
+    long canceledOrders;
 }
-

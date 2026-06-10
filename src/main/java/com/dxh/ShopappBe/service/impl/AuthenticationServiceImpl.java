@@ -90,9 +90,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 user.getPassword());
 
         if (!authenticated)
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(ErrorCode.INVALID_CREDENTIALS);
         if(!user.getEnabled())
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);
         var token = generateToken(user);
         String roles = user.getRoles()
                 .stream()
@@ -102,6 +102,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return AuthenticationResponse.builder()
                 .role(roles)
                 .token(token)
+                .userId(user.getId())
                 .authenticated(true)
                 .fullName(user.getFullName())
                 .username(user.getUsername())

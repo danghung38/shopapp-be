@@ -1,10 +1,10 @@
 package com.dxh.ShopappBe.service;
 
 import com.dxh.ShopappBe.dto.response.ChatMessageResponse;
-import com.dxh.ShopappBe.dto.response.NotificationResponse;
 import com.dxh.ShopappBe.entity.Order;
 import com.dxh.ShopappBe.entity.User;
 import com.dxh.ShopappBe.enums.NotificationType;
+import com.dxh.ShopappBe.repo.UserRepository;
 import com.dxh.ShopappBe.service.interfac.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -13,53 +13,55 @@ import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class WebSocketService {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     @Autowired
     public WebSocketService(SimpMessagingTemplate messagingTemplate,
-                            @Lazy NotificationService notificationService) {
+                            @Lazy NotificationService notificationService,
+                            UserRepository userRepository) {
         this.messagingTemplate = messagingTemplate;
         this.notificationService = notificationService;
+        this.userRepository = userRepository;
     }
 
-    /**
-     * Gửi thông báo tới tất cả admin qua topic broadcast
-     */
     public void sendNotificationToAdmin(String notification) {
         messagingTemplate.convertAndSend("/topic/admin-notifications", notification);
     }
 
     /**
-     * Gửi notification khi có đơn hàng mới:
-     * - Push broadcast cho admin dashboard
-     * - Lưu DB + push riêng tới user đặt hàng (để họ biết đơn đã được tiếp nhận)
+     * Khi có đơn hàng mới:
+     * - Broadcast cho admin dashboard
+     * - Lưu DB + push tới TỪNG admin (để chuông admin nhận realtime + lưu lịch sử)
+     * - Lưu DB + push tới customer
      */
     public void sendNewOrderNotification(Order order, User customer) {
-        // 1. Push tới admin dashboard (broadcast)
-        String adminMsg = "Đơn hàng mới #" + order.getId() + " từ " + customer.getFullName();
+        // 1. Broadcast topic (nếu admin mở dashboard kiểu cũ)
+        String adminMsg = "New order #" + order.getId() + " from " + customer.getFullName();
         sendNotificationToAdmin(adminMsg);
 
-        // 2. Lưu DB + push realtime tới customer
-        String customerMsg = "Đơn hàng #" + order.getId() + " đã được đặt thành công. Chờ xác nhận.";
+        // 2. Tạo notification DB + realtime cho tất cả admin
+        List<User> admins = userRepository.findByRoles_Name("ADMIN");
+        for (User admin : admins) {
+            notificationService.createAndSendNotification(admin, adminMsg, NotificationType.ORDER, order);
+        }
+
+        // 3. Notification cho customer
+        String customerMsg = "Order #" + order.getId() + " placed successfully. Awaiting confirmation.";
         notificationService.createAndSendNotification(customer, customerMsg, NotificationType.ORDER, order);
     }
 
-    /**
-     * Gửi notification khi trạng thái đơn hàng thay đổi (shipping, delivered, canceled)
-     */
     public void sendOrderStatusNotification(Order order, User customer) {
-        String msg = "Đơn hàng #" + order.getId() + " đã chuyển sang trạng thái: " + order.getStatus().name();
+        String msg = "Order #" + order.getId() + " status changed to: " + order.getStatus().name();
         notificationService.createAndSendNotification(customer, msg, NotificationType.ORDER, order);
     }
 
-    /**
-     * Chat: gửi tin nhắn riêng tới 1 user
-     */
     public ChatMessageResponse sendPrivateMessage(String to, String content, Principal sender) {
         String from = sender.getName();
         ChatMessageResponse response = ChatMessageResponse.builder()
@@ -69,11 +71,7 @@ public class WebSocketService {
                 .content(content)
                 .build();
 
-        messagingTemplate.convertAndSendToUser(
-                to,
-                "/queue/messages",
-                response
-        );
+        messagingTemplate.convertAndSendToUser(to, "/queue/messages", response);
         return response;
     }
 }

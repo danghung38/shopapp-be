@@ -13,4 +13,6 @@ public interface DiscountService {
     void deleteDiscount(Long discountId);
 
     void changeStatus(Long id);
+
+    DiscountResponse updateQuantity(Long id, Long quantity);
 }

@@ -87,11 +87,14 @@ public class ProductServiceImpl implements ProductService {
         Product product = getProduct(productId);
         product.setNameProduct(productUpdateRequest.getNameProduct());
         product.setDescription(productUpdateRequest.getDescription());
-        product.setDescriptionShort(product.getDescriptionShort());
+        product.setDescriptionShort(productUpdateRequest.getDescriptionShort());
         product.setBrand(productUpdateRequest.getBrand());
         product.setPrice(productUpdateRequest.getPrice());
         product.setPromotionalPrice(productUpdateRequest.getPromotionalPrice());
         product.setQuantity(productUpdateRequest.getQuantity());
+        if (productUpdateRequest.getTotalSold() != null) {
+            product.setTotalSold(productUpdateRequest.getTotalSold());
+        }
         product.setCategory(categoryRepository.findById(productUpdateRequest.getCategoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_EXIST)));
         if(productImage != null && !productImage.isEmpty()){

@@ -72,4 +72,16 @@ public class DiscountController {
                 .message("change status successful")
                 .build();
     }
+
+    @Operation(method = "PATCH", summary = "Update discount quantity",
+            description = "Update quantity of discount")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PatchMapping("/{id}/quantity")
+    public ApiResponse<DiscountResponse> updateQuantity(@PathVariable Long id, @RequestParam Long quantity) {
+        return ApiResponse.<DiscountResponse>builder()
+                .code(HttpStatus.OK.value())
+                .message("update quantity successful")
+                .result(discountService.updateQuantity(id, quantity))
+                .build();
+    }
 }
