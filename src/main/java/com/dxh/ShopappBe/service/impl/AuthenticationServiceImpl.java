@@ -13,6 +13,7 @@ import com.dxh.ShopappBe.exception.AppException;
 import com.dxh.ShopappBe.exception.ErrorCode;
 import com.dxh.ShopappBe.repo.InvalidatedTokenRepository;
 import com.dxh.ShopappBe.repo.UserRepository;
+import com.dxh.ShopappBe.service.LoginAttemptService;
 import com.dxh.ShopappBe.service.interfac.AuthenticationService;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
@@ -45,6 +46,7 @@ import java.util.stream.Collectors;
 public class AuthenticationServiceImpl implements AuthenticationService {
     UserRepository userRepository;
     InvalidatedTokenRepository invalidatedTokenRepository;
+    LoginAttemptService loginAttemptService;
 
 
     @NonFinal
@@ -81,16 +83,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 //    login
     @Override
-    public AuthenticationResponse authenticate(AuthenticationRequest request){
+    public AuthenticationResponse authenticate(AuthenticationRequest request, String ip){
+        //rate limit
+        loginAttemptService.assertNotBlocked(
+                request.getUsername(),
+                ip
+        );
+
         var user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+                .orElse(null);
 
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        boolean authenticated = passwordEncoder.matches(request.getPassword(),
-                user.getPassword());
+        if(user == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())){
+            //rl
+            loginAttemptService.loginFailed(request.getUsername(), ip);
 
-        if (!authenticated)
             throw new AppException(ErrorCode.INVALID_CREDENTIALS);
+        }
+
         if(!user.getEnabled())
             throw new AppException(ErrorCode.EMAIL_NOT_VERIFIED);
         var token = generateToken(user);
@@ -98,6 +108,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .stream()
                 .map(role -> role.getName().toString()) // Chuyển mỗi Role thành chuỗi
                 .collect(Collectors.joining(" "));
+        //rl
+        loginAttemptService.loginSucceeded(
+                request.getUsername(),
+                ip
+        );
 
         return AuthenticationResponse.builder()
                 .role(roles)

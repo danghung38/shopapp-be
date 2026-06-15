@@ -23,6 +23,8 @@ public enum ErrorCode {
     UNAUTHENTICATED(401, "Unauthenticated", HttpStatus.UNAUTHORIZED),
     EMAIL_NOT_VERIFIED(401, "Account email is not verified", HttpStatus.UNAUTHORIZED),
     INVALID_CREDENTIALS(401, "Invalid username or password", HttpStatus.UNAUTHORIZED),
+    ACCOUNT_LOCKED(429, "Too many failed login attempts. Account is locked for 5 minutes", HttpStatus.TOO_MANY_REQUESTS),
+    TOO_MANY_REQUESTS(429, "Too many requests. Please try again later", HttpStatus.TOO_MANY_REQUESTS),
     UNAUTHORIZED(403, "You do not have permission", HttpStatus.FORBIDDEN),
     INVALID_DOB(400, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
     UPLOAD_FAIL(400, "Error uploading file to S3", HttpStatus.BAD_REQUEST),

@@ -5,8 +5,10 @@ import com.dxh.ShopappBe.dto.response.ApiResponse;
 import com.dxh.ShopappBe.dto.response.PageResponse;
 import com.dxh.ShopappBe.dto.response.UserResponse;
 import com.dxh.ShopappBe.dto.response.UserUpdateResponse;
+import com.dxh.ShopappBe.enums.RateLimitEnum;
 import com.dxh.ShopappBe.service.AwsS3Service;
 import com.dxh.ShopappBe.service.interfac.UserService;
+import com.dxh.ShopappBe.validator.RateLimit;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -36,6 +38,11 @@ public class UserController {
     @Operation(method = "POST", summary = "Add new user",
             description = "Send a request via this API to create new user")
     @PostMapping
+    @RateLimit(
+            action = RateLimitEnum.REGISTER,
+            maxRequests = 5,
+            durationMinutes = 5
+    )
     ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request){
         return ApiResponse.<UserResponse>builder()
                 .code(HttpStatus.CREATED.value())
@@ -56,9 +63,15 @@ public class UserController {
                 .build();
     }
 
+
     @Operation(method = "POST", summary = "Forgot password",
             description = "Fogot password")
     @PostMapping("/forgot-password")
+    @RateLimit(
+            action = RateLimitEnum.FORGOT_PASSWORD,
+            maxRequests = 5,
+            durationMinutes = 5
+    )
     ApiResponse<?> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request){
         userService.forgotPassword(request);
         return ApiResponse.<UserResponse>builder()
@@ -70,6 +83,11 @@ public class UserController {
     @Operation(method = "POST", summary = "Reset password",
             description = "Reset password")
     @PostMapping("/reset-password")
+    @RateLimit(
+            action = RateLimitEnum.RESET_PASSWORD,
+            maxRequests = 5,
+            durationMinutes = 5
+    )
     ApiResponse<?> resetPassword(@RequestBody @Valid ResetPasswordRequest request){
         userService.resetPassword(request);
         return ApiResponse.<UserResponse>builder()
@@ -92,6 +110,11 @@ public class UserController {
     }
 
     //xác thực email
+    @RateLimit(
+            action = RateLimitEnum.VERIFY_EMAIL,
+            maxRequests = 5,
+            durationMinutes = 5
+    )
     @Operation(summary = "Confirm Email", description = "Confirm email for account")
     @GetMapping("/confirm-email")
     public void confirmEmail(@RequestParam String secretKey, HttpServletResponse response) throws IOException {

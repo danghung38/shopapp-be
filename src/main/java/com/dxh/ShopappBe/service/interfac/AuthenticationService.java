@@ -16,7 +16,7 @@ public interface AuthenticationService {
                 throws JOSEException, ParseException;
 
     //đăng nhập và tạo token
-    AuthenticationResponse authenticate(AuthenticationRequest request);
+    AuthenticationResponse authenticate(AuthenticationRequest request,String ip);
 
     //token sắp hết hạn thì gia hạn
     AuthenticationResponse refreshToken(RefreshRequest request)

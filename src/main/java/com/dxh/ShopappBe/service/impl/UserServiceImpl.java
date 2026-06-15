@@ -21,6 +21,7 @@ import com.dxh.ShopappBe.repo.specification.UserSpecificationsBuilder;
 import com.dxh.ShopappBe.service.AwsS3Service;
 import com.dxh.ShopappBe.service.EmailService;
 import com.dxh.ShopappBe.service.interfac.UserService;
+import com.dxh.ShopappBe.validator.RateLimit;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

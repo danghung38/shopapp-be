@@ -11,6 +11,7 @@ import com.dxh.ShopappBe.dto.response.IntrospectResponse;
 import com.dxh.ShopappBe.service.interfac.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -36,8 +37,9 @@ public class AuthenticationController {
     @Operation(method = "POST", summary = "login account",
             description = "Login and generate token")
     @PostMapping("/login")
-    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request){
-        var result = authenticationService.authenticate(request);
+    ApiResponse<AuthenticationResponse> authenticate(@RequestBody AuthenticationRequest request, HttpServletRequest servletRequest){
+        String ip = servletRequest.getRemoteAddr();
+        var result = authenticationService.authenticate(request, ip);
         return ApiResponse.<AuthenticationResponse>builder()
                 .code(HttpStatus.OK.value())
                 .result(result)

@@ -13,8 +13,7 @@ import java.util.regex.Pattern;
 import static com.dxh.ShopappBe.utils.AppConstant.SORT_BY;
 
 public class Utils {
-    public static Pageable createPageable(Integer pageNo, Integer pageSize, String sortBy){
-        int page = pageNo>0?(pageNo-1):0;
+    public static Pageable createPageable(Integer pageNo, Integer pageSize, String sortBy){        int page = pageNo>0?(pageNo-1):0;
         List<Sort.Order> sorts = new ArrayList<>();
         if (StringUtils.hasLength(sortBy)) {
             // name:asc|desc
@@ -37,5 +36,20 @@ public class Utils {
         return pageable;
     }
 
+    /**
+     * Lấy IP thật của client, ưu tiên header X-Forwarded-For (khi có proxy/load balancer).
+     */
+    public static String getClientIp(jakarta.servlet.http.HttpServletRequest request) {
+        if (request == null) return "unknown";
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isBlank()) {
+            return xff.split(",")[0].trim();
+        }
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
+        }
+        return request.getRemoteAddr();
+    }
 
 }
